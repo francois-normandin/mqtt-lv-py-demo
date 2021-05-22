@@ -3,8 +3,6 @@ import requests
 import logging
 from random import randint
 
-_LOG_FILE_NAME = 'mqttClientDemo_log.txt'
-
 def url_ok(url):
     r = requests.head(url)
     return r.status_code == 200
@@ -13,15 +11,17 @@ class mqttClientDemo(object):
 
     def __init__(self, **kwargs):
         self.clientName = kwargs.get('clientName', 'Client'+str(randint(0, 8191)))
-        self.brokerUrl = kwargs.get('brokerUrl', r'localhost')
+        self.brokerUrl = kwargs.get('brokerUrl', r'test.mosquitto.org')
         self.brokerPort = kwargs.get('brokerPort', 1883)
         self.timeout = kwargs.get('timeout', 60)
         self.doEncrypt = kwargs.get('doEncrypt', False)
         self.doAuth = kwargs.get('doAuth', False)
+        self.logFilename = kwargs.get('logFilename', None)
+
         self.client = None
         self.logger = None
         self.subscriptions = None
-
+        self.isConnected = None
         self.initConfig()
 
     def initConfig(self, **kwargs):
@@ -33,8 +33,10 @@ class mqttClientDemo(object):
         self.client.on_message = self.on_message
 
     def setupLogger(self):
-        self.logger = logging.getLogger(self.clientName)                            # Logging prefaced with client name
-        handlers = [logging.FileHandler(_LOG_FILE_NAME), logging.StreamHandler()]   # Log to file and command window
+        self.logger = logging.getLogger(self.clientName) # Logging prefaced with client name
+        handlers = [logging.StreamHandler()]  # Log to file and command window
+        if self.logFilename is not None:
+            handlers.append(logging.FileHandler(self.logFilename))
         logging.basicConfig(encoding='utf-8', level=logging.INFO, handlers=handlers)
 
     def checkClassSupport(self):
@@ -49,6 +51,7 @@ class mqttClientDemo(object):
         else:
             self.logger.info('Connection to {} on port {} failed. Unable to reach broker.'.format(self.brokerUrl, self.brokerPort))
 
+        self.isConnected = True
         self.client.loop_start()
 
     def on_connect(self, client, userdata, flags, rc):
@@ -65,6 +68,7 @@ class mqttClientDemo(object):
     def disconnect(self):
         self.logger.info('Disconnecting')
         self.client.disconnect()
+        self.isConnected = False
 
     def subscribe(self, topic):
         self.logger.info('Subscribing to {}'.format(topic))
