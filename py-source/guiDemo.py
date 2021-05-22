@@ -2,91 +2,161 @@ import PySimpleGUI as psg
 from datetime import datetime, timedelta
 from mqttClient import mqttClientDemo
 from time import sleep
+import json
 import threading
 
-def sendTemperatureSetpoint(mqttClient, topic, strSetpoint):
-    if mqttClient.isConnected == False:
-        return
+#Variables
+client1 = mqttClientDemo(brokerUrl=r'localhost', brokerPort = 1883)
+setpointTopic = r'system/setpoint'
+enableTopic = r'systen/enable'
+targetTopic = r'system/target'
+
+
+#Request methods
+def sendSetpointCommand(topic = setpointTopic, setpoint = 25.0):
+    if client1.isConnected == False:
+        return 'not connected'
     # send command
-    return 'mqTT command return'
+    targetRequest = {"setpoint": setpoint}
+    client1.publish(topic, json.dumps(targetRequest))
+    return 'MQTT command return'
 
-def psrCycle(mqttClient, cycleLowTemp=45, cycleLowSecs=10, cycleHighTemp=75, cycleHighSecs=10, endtemp=25):
-    if mqttClient.isConnected == False:
-        mqttClient.connect()
+def sendEnableCommand(topic = enableTopic, enabled = False):
+    if client1.isConnected == False:
+        return 'not connected'
+    # send command
+    targetRequest = {"enabled": enabled}
+    client1.publish(topic, json.dumps(targetRequest))
+    return 'MQTT command return'
 
+def sendTargetCommand(topic = targetTopic, enabled = False, setpoint = 25.0):
+    if client1.isConnected == False:
+        return 'not connected'
+    # send command
+    targetRequest = {"enabled": enabled, "setpoint": setpoint, "responseURI": (client1.clientName + '/target-command')}
+    client1.publish(topic, json.dumps(targetRequest))
+    return 'MQTT command return'
+
+def pcrCycle(denaturation=95.0, annealing=55.0, elongation=72.0, dwelltime=5):
     elapsed = 0
     cycleFinished = False
     while not cycleFinished:
         if elapsed == 0:
-            pass # send mqtt message to set low cycle temperature
-        elif elapsed == cycleLowSecs:
-            pass # send mqtt message to set high cycle temperature
-        elif elapsed >= (cycleLowSecs + cycleHighSecs):
-            pass # send mqtt message to set end cycle temperature
+            sendTargetCommand(targetTopic, True, denaturation)
+            publishPcrState("denaturation")
+        elif elapsed == dwelltime:
+            sendTargetCommand(targetTopic, True, annealing)
+            publishPcrState("annealing")
+        elif elapsed == (2*dwelltime):
+            sendTargetCommand(targetTopic, True, elongation)
+            publishPcrState("elongation")
+        elif elapsed == (3*dwelltime):
             cycleFinished = True
         sleep(1)
         elapsed += 1
+    
+def publishPcrState(step = 'unknown', cycle = None):
+    state = {"step": step}
+    if cycle != None:
+        state["loop"] = cycle
+    client1.publish(targetTopic, json.dumps(state))
+    return json.dumps(state)
 
-def executePSRCycle(mqttClient, nbCycles):
+def executepcrCycle(mqttClient, nbCycles):
     if nbCycles == 0:
         return
 
+    disconnectOnComplete = False
+    if client1.isConnected == False:
+        client1.connect()
+        disconnectOnComplete = True
+
+    publishPcrState("Starting PCR Cycling")
+    sendTargetCommand(targetTopic, True, 95.0)
+    sleep(5)
     for i in range(nbCycles):
-        psrCycle(mqttClient)
+        publishPcrState("PCR Cycle", i+1)
+        pcrCycle()
 
-autoTab = [[psg.T('Call a script in Python which automates some actions.')],
-           [psg.Text(' ')],
-           [psg.Text('Number of cycles'), psg.InputText('0', size=(5,1), key='-nbCycles-', enable_events=True)],
-           [psg.Button('Call PSR Cycle script', size=(20,2), key='-callPsr-')]]
-manualTab = [[psg.T('Manually control temperature set-point')],
-             [psg.Text(' ')],
-             [psg.Button('Connect', size=(20,2), key='-connect-')],
-             [psg.Checkbox('Enable commands', size=(12, 1), default=False, enable_events=True, key='-cmdEnable-')],
-             [psg.Text('Temp. set point (degC):', size=(18, 1), key='-tempText-'), psg.InputText('25', size=(6,1), visible=False, key='-tempInput-', enable_events=True)],
-             [psg.Button('Submit', size=(1,1), visible=False, bind_return_key=True)]]
+    publishPcrState("PCR Cycling Complete")
+    sendTargetCommand(targetTopic, False)
+    if disconnectOnComplete:
+        client1.disconnect()
+    
 
-layout = [[psg.TabGroup([[psg.Tab('Manual', manualTab), psg.Tab('Script-based', autoTab)]])], [psg.Text('Response', size=(20,1))], [psg.Text('', size=(40,1), key='-response-')]]
-window = psg.Window('My window with tabs', layout, finalize=True)
+autoTab = [
+            [psg.T('Call a script in Python which automates some actions.')],
+            [psg.Text(' ')],
+            [psg.Text('Number of cycles'), psg.InputText('5', size=(5,1), key='-nbCycles-', enable_events=True)],
+            [psg.Button('Run PCR Cycle script', size=(20,2), key='-callPcr-')]
+          ]
+manualTab = [
+                [psg.T('Manual control')],
+                [psg.Text(' ')],
+                [psg.Text('Hostname'), psg.InputText('localhost', size=(35,1), key='-hostname-', enable_events=False)],
+                [psg.Button('Connect', size=(20,2), visible=True, key='-connect-')],
+                [psg.Checkbox('Enable command', size=(12, 1), default=False, visible=False, enable_events=True, key='-cmdEnable-')],
+                [   
+                    psg.Text(   'Set point:',
+                                size=(8, 1), 
+                                visible=False, 
+                                key='-tempText-'
+                            ), 
+                    psg.Slider  ( 
+                                    range=(0.0,120.0),
+                                    default_value=25.0, 
+                                    size=(20,15), 
+                                    orientation='horizontal', 
+                                    font=('Helvetica', 12), 
+                                    visible=False, 
+                                    key='-tempInput-', 
+                                    enable_events=True
+                                )
+                ]
+            ]
 
-client1 = mqttClientDemo()
-tempSetpointTopic = 'whatever'
+layout = [  [psg.TabGroup(
+                [   [psg.Tab('Manual', manualTab), 
+                     psg.Tab('Async script', autoTab)]])],
+            [psg.Text('Response', size=(20,1))],
+            [psg.Text('', size=(40,1), key='-response-')]]
 
-lastAcceptedTempString = None
-entryAcceptTimeout = None
+window = psg.Window('MQTT Python Client (View)', layout, finalize=True)
+
 while True:
-
-    if entryAcceptTimeout is not None:
-        delta = datetime.now() - entryAcceptTimeout
-        if delta.total_seconds() >= 0:
-            lastAcceptedTempString = window['-tempInput-'].get()
-            entryAcceptTimeout = None
-            window['-response-'].update(sendTemperatureSetpoint(client1, tempSetpointTopic, lastAcceptedTempString))
 
     event, values = window.read()
     if event == '-connect-':
-        client1.connect()
+        if client1.isConnected:
+            client1.disconnect()
+            window[event].update('Connect')
+            window['-cmdEnable-'].update(visible = False)
+            window['-tempInput-'].update(visible = False)
+            window['-tempText-'].update(visible = False)
+        else:
+            client1.brokerUrl = values['-hostname-']
+            client1.connect()
+            window['-connect-'].update('Disconnect')
+            window['-cmdEnable-'].update(visible = True)
+            window['-tempInput-'].update(visible = True)
+            window['-tempText-'].update(visible = True)
+        
 
-    elif event == '-callPsr-':
-        t = threading.Thread(target=executePSRCycle, args=(client1, int(values['-nbCycles-'])))
+    elif event == '-callPcr-':
+        t = threading.Thread(target=executepcrCycle, args=(client1, int(values['-nbCycles-'])))
         t.start()
 
     elif event == '-cmdEnable-':
-        #window['-tempText-'].update(visible=values['-cmdEnable-'])
-        window['-tempInput-'].update(visible=values['-cmdEnable-'])
+        slider = window['-tempInput-']
+        targetSetpoint = slider.TKScale.get()
+        targetEnabled = bool(window['-cmdEnable-'].get())
+        sendTargetCommand(targetTopic, targetEnabled, targetSetpoint)
 
     elif event == '-tempInput-':
-        if len(values['-tempInput-']) and values['-tempInput-'][-1] not in ('0123456789.'):
-            window['-tempInput-'].update(values['-tempInput-'][:-1])    # delete last char from input
-        else:
-            entryAcceptTimeout = datetime.now() + timedelta(seconds=1)
-    elif event == '-nbCycles-':
-        if len(values['-nbCycles-']) and values['-nbCycles-'][-1] not in ('0123456789'):
-                window['-nbCycles-'].update(values['-nbCycles-'][:-1])  # delete last char from input
-
-    elif event == 'Submit':
-        lastAcceptedTempString = window['-tempInput-'].get()
-        entryAcceptTimeout = None
-        window['-response-'].update(sendTemperatureSetpoint(client1, tempSetpointTopic, lastAcceptedTempString))
+        slider = window['-tempInput-']
+        targetSetpoint = slider.TKScale.get()
+        targetEnabled = bool(window['-cmdEnable-'].get())
+        sendTargetCommand(targetTopic, targetEnabled, targetSetpoint)
 
     elif event == psg.WIN_CLOSED:           # always,  always give a way out!
         break

@@ -21,7 +21,7 @@ class mqttClientDemo(object):
         self.client = None
         self.logger = None
         self.subscriptions = None
-        self.isConnected = None
+        self.isConnected = False
         self.initConfig()
 
     def initConfig(self, **kwargs):
