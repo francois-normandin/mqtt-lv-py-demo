@@ -16,16 +16,17 @@
 			<Item Name="mqttServer.vi" Type="VI" URL="../MQTT Server/mqttServer.vi"/>
 		</Item>
 		<Item Name="MQTT Client Applications" Type="Folder">
+			<Item Name="py-source" Type="Folder">
+				<Item Name="guiDemo.py" Type="Document" URL="../Instrument/py-source/guiDemo.py"/>
+				<Item Name="labview_mqtt.py" Type="Document" URL="../Instrument/py-source/labview_mqtt.py"/>
+				<Item Name="mqttClient.py" Type="Document" URL="../Instrument/py-source/mqttClient.py"/>
+				<Item Name="PythonCaller.vi" Type="VI" URL="../Instrument/py-source/PythonCaller.vi"/>
+				<Item Name="LaunchPythonMethod.vi" Type="VI" URL="../Instrument/py-source/LaunchPythonMethod.vi"/>
+			</Item>
 			<Item Name="mqttClient_ModelController.vi" Type="VI" URL="../Instrument/mqttClient_ModelController.vi"/>
 			<Item Name="mqttClient_Viewer.vi" Type="VI" URL="../Instrument/mqttClient_Viewer.vi"/>
 			<Item Name="state -- cluster.ctl" Type="VI" URL="../Instrument/state -- cluster.ctl"/>
 			<Item Name="target -- cluster.ctl" Type="VI" URL="../Instrument/target -- cluster.ctl"/>
-		</Item>
-		<Item Name="py-source" Type="Folder">
-			<Item Name="guiDemo.py" Type="Document" URL="../py-source/guiDemo.py"/>
-			<Item Name="labview_mqtt.py" Type="Document" URL="../py-source/labview_mqtt.py"/>
-			<Item Name="mqttClient.py" Type="Document" URL="../py-source/mqttClient.py"/>
-			<Item Name="PythonCaller.vi" Type="VI" URL="../py-source/PythonCaller.vi"/>
 		</Item>
 		<Item Name="Dependencies" Type="Dependencies">
 			<Item Name="user.lib" Type="Folder">
