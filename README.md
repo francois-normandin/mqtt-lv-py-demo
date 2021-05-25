@@ -1,6 +1,6 @@
 # MQTT LabVIEW-Python Demo
 
-This project is the support material for the UK TAG (May 28th 2021) presentation.
+This project is the support material for the UK TAG #7 (May 28th 2021) presentation.
 
 
 Abstract
