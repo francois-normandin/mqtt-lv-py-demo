@@ -16,6 +16,16 @@
 			<Item Name="mqttServer.vi" Type="VI" URL="../MQTT Server/mqttServer.vi"/>
 			<Item Name="logPublishPacket.vi" Type="VI" URL="../MQTT Server/logPublishPacket.vi"/>
 		</Item>
+		<Item Name="Pub-Sub" Type="Folder">
+			<Item Name="Demo1_Publisher.vi" Type="VI" URL="../Pub-Sub Demo/Demo1_Publisher.vi"/>
+			<Item Name="Demo1_Subscriber.vi" Type="VI" URL="../Pub-Sub Demo/Demo1_Subscriber.vi"/>
+		</Item>
+		<Item Name="Request-Reply" Type="Folder">
+			<Item Name="Demo1_Service.vi" Type="VI" URL="../Req-Reply Demo/Demo1_Service.vi"/>
+			<Item Name="Demo1_Requestor.vi" Type="VI" URL="../Req-Reply Demo/Demo1_Requestor.vi"/>
+			<Item Name="request -- cluster.ctl" Type="VI" URL="../Req-Reply Demo/request -- cluster.ctl"/>
+			<Item Name="response -- cluster.ctl" Type="VI" URL="../Req-Reply Demo/response -- cluster.ctl"/>
+		</Item>
 		<Item Name="MQTT Client Applications" Type="Folder">
 			<Item Name="py-source" Type="Folder">
 				<Item Name="guiDemo.py" Type="Document" URL="../Instrument/py-source/guiDemo.py"/>
@@ -128,6 +138,7 @@
 				<Item Name="VariantType.lvlib" Type="Library" URL="/&lt;vilib&gt;/Utility/VariantDataType/VariantType.lvlib"/>
 				<Item Name="whitespace.ctl" Type="VI" URL="/&lt;vilib&gt;/Utility/error.llb/whitespace.ctl"/>
 				<Item Name="MQTT Server.lvlib" Type="Library" URL="/&lt;vilib&gt;/G Open Source Project for LabVIEW/MQTT Broker/MQTT Server.lvlib"/>
+				<Item Name="Serializer.Base64.lvclass" Type="LVClass" URL="/&lt;vilib&gt;/LabVIEW Open Source Project/OpenSerializer.Base64/Serializer.Base64.lvclass"/>
 			</Item>
 		</Item>
 		<Item Name="Build Specifications" Type="Build"/>
