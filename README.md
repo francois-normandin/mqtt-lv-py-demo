@@ -15,4 +15,12 @@ The demo consists of simulation of an instrument that can be controlled through 
 * A Python-based UI connects through TCP and mimics the functionality in the LabVIEW-based UI.
 * A LabVIEW wrapper can launch the Python-based User Interface.
 
+## Pre-requisite
 
+LabVIEW 2019
+- Install the package dependencies with VIPM (installMe.vipc)
+
+Python 3.5+
+- pip install paho-mqtt
+- pip install requests
+- pip install PySimpleGUI
