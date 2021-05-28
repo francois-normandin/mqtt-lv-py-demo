@@ -2,8 +2,11 @@
 
 This project is the support material for the UK TAG #7 (May 28th 2021) presentation.
 
+## License
+You are free to reuse all the demo code for your own needs, modify it and use it without attribution.
+The PPT presentation is not part of the software license. If you reuse it or any part of it for your own training, please provide attribution.
 
-Abstract
+## Abstract
 
 "In this presentation, I will quickly introduce the MQTT protocol and present an all-LabVIEW open source implementation of MQTT Broker-Client libraries.
 I'll then go through a couple demos featuring LabVIEW and Python MQTT clients to establish communication with an instrument acting as an MQTT server."
